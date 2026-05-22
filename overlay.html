@@ -30,6 +30,7 @@
 
 </div>
 
+<!-- ANIMAZIONE GOAL -->
 <div id="goalAnimation">
   <div id="track">
     <img id="ball" src="pallone.png">
@@ -40,20 +41,41 @@
 <script src="script.js"></script>
 
 <script>
+let lastScore1 = 0;
+let lastScore2 = 0;
+
+// WebSocket (Render + locale fallback)
 const ws = new WebSocket("wss://" + location.host);
 
 ws.onmessage = (msg)=>{
 const d = JSON.parse(msg.data);
 
+// 🔥 AUTO GOAL DETECTION
+if(d.score1 > lastScore1){
+  showGoal();
+}
+if(d.score2 > lastScore2){
+  showGoal();
+}
+
+lastScore1 = d.score1;
+lastScore2 = d.score2;
+
+// SCORE
 document.getElementById("score1").innerText = d.score1;
 document.getElementById("score2").innerText = d.score2;
+
+// TIMER
 document.getElementById("timer").innerText = d.timer;
 
+// TEAMS
 document.getElementById("team1").innerText = d.team1;
 document.getElementById("team2").innerText = d.team2;
 
+// LOGOS
 document.getElementById("logo1").src = d.logo1;
 document.getElementById("logo2").src = d.logo2;
+
 };
 </script>
 
