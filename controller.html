@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>CONTROL PANEL</title>
+<style>
+body{font-family:Arial;background:#111;color:white;text-align:center;padding:20px}
+button{padding:10px 20px;margin:5px;font-size:18px}
+input{padding:10px;margin:5px;width:200px}
+</style>
+</head>
+
+<body>
+
+<h2>🎮 CONTROL PANEL</h2>
+
+<button onclick="send('goal1')">⚽ Casa +1</button>
+<button onclick="send('goal2')">⚽ Ospite +1</button>
+<button onclick="send('timer')">⏱ Start/Stop</button>
+<button onclick="send('reset')">🔄 Reset</button>
+
+<h3>Squadre</h3>
+
+<input id="t1" placeholder="Casa">
+<input id="t2" placeholder="Ospite">
+<button onclick="setTeams()">Aggiorna</button>
+
+<h3>Loghi (URL)</h3>
+
+<input id="l1" placeholder="Logo Casa">
+<input id="l2" placeholder="Logo Ospite">
+<button onclick="setLogos()">Aggiorna</button>
+
+<script>
+const ws = new WebSocket("wss://" + location.host);
+
+function send(type){
+ws.send(JSON.stringify({type}));
+}
+
+function setTeams(){
+ws.send(JSON.stringify({
+type:"team",
+team1:document.getElementById("t1").value,
+team2:document.getElementById("t2").value
+}));
+}
+
+function setLogos(){
+ws.send(JSON.stringify({
+type:"logo",
+logo1:document.getElementById("l1").value,
+logo2:document.getElementById("l2").value
+}));
+}
+</script>
+
+</body>
+</html>
