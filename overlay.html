@@ -202,14 +202,14 @@
         function triggerAnimation(className) {
             const animContainer = document.getElementById("goalAnimation");
             
-            // Pulizia classi precedenti per resettare il CSS
+            // Rimuove tutte le classi per resettare lo stato di palla e testi
             animContainer.classList.remove("active-goal", "active-var");
-            void animContainer.offsetWidth; // Forza il reset hardware del browser
+            void animContainer.offsetWidth; // Trucco di reflow per forzare il riavvio dei @keyframes CSS
             
             // Attiva la classe specifica richiesta (active-goal o active-var)
             animContainer.classList.add(className);
 
-            // Nasconde l'animazione dopo 3.5 secondi
+            // Nasconde l'animazione dopo 3.5 secondi complessi
             setTimeout(() => {
                 animContainer.classList.remove(className);
             }, 3500); 
