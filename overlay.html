@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <title>Scoreboard Animata</title>
+    <title>Scoreboard Animata con VAR</title>
     <style>
         body {
             margin: 0;
@@ -43,9 +43,7 @@
             height: 60px;
         }
 
-        .center {
-            text-align: center;
-        }
+        .center { text-align: center; }
 
         .score {
             font-size: 46px;
@@ -58,7 +56,7 @@
             margin-top: 5px;
         }
 
-        /* === SEZIONE GOAL ANIMATION === */
+        /* === CONTENITORE ANIMAZIONI (GOAL & VAR) === */
         #goalAnimation {
             position: absolute;
             width: 100%;
@@ -67,12 +65,16 @@
             justify-content: center;
             align-items: center;
             z-index: 999;  
-            background: rgba(0, 0, 0, 0.2); 
         }
 
-        #goalAnimation.active {
+        #goalAnimation.active-goal, 
+        #goalAnimation.active-var {
             display: flex; 
         }
+
+        /* Sfondo scuro per il Gol, Sfondo Giallo/Arancio per la VAR */
+        #goalAnimation.active-goal { background: rgba(0, 0, 0, 0.3); }
+        #goalAnimation.active-var { background: rgba(255, 68, 68, 0.2); }
 
         #track {
             position: relative;
@@ -86,30 +88,42 @@
             width: 180px;
             top: 50%;
             transform: translateY(-50%);
-            left: 0;
+            left: -200px; /* Fuori dallo schermo di base */
         }
 
-        #goalText {
+        #goalText, #varText {
             position: absolute;
             top: 50%;
             left: 50px;
             transform: translateY(-50%);
             font-size: 120px;
             font-weight: bold;
-            color: black;
-            text-shadow: 0 0 20px red, 0 0 35px blue;
             white-space: nowrap;
             overflow: hidden;
             width: 0;
         }
 
-        /* Le animazioni partono solo quando c'è la classe .active */
-        #goalAnimation.active #ball {
-            animation: moveBall 2.5s linear forwards;
+        #goalText {
+            color: black;
+            text-shadow: 0 0 20px red, 0 0 35px blue;
         }
 
-        #goalAnimation.active #goalText {
+        #varText {
+            color: #ffcc00;
+            text-shadow: 0 0 20px black, 0 0 35px red;
+        }
+
+        /* --- ATTIVAZIONE ANIMAZIONE GOAL --- */
+        #goalAnimation.active-goal #ball {
+            animation: moveBall 2.5s linear forwards;
+        }
+        #goalAnimation.active-goal #goalText {
             animation: revealText 2.5s linear forwards;
+        }
+
+        /* --- ATTIVAZIONE ANIMAZIONE VAR (Niente palla, solo testo) --- */
+        #goalAnimation.active-var #varText {
+            animation: revealText 2.5s ease-in-out forwards;
         }
 
         @keyframes moveBall {
@@ -119,7 +133,7 @@
 
         @keyframes revealText {
             0% { width: 0; }
-            100% { width: 700px; }
+            100% { width: 750px; }
         }
     </style>
 </head>
@@ -143,7 +157,8 @@
     <div id="goalAnimation">
         <div id="track"> 
             <img id="ball" src="pallone.png">
-            <div id="goalText">GOOAL</div>
+            <div id="goalText">GOOOOOAL</div>
+            <div id="varText">❌ GOL ANNULLATO (VAR)</div>
         </div>
     </div>
 
@@ -158,12 +173,19 @@
         ws.onmessage = (msg) => {
             const d = JSON.parse(msg.data);
 
+            // Gestione dei trigger grafici basati sul cambio di punteggio
             if (prevScore1 !== null && prevScore2 !== null) {
+                // CASO 1: Il punteggio sale -> GOAL!
                 if (d.score1 > prevScore1 || d.score2 > prevScore2) {
-                    triggerGoal();
+                    triggerAnimation("active-goal");
+                } 
+                // CASO 2: Il punteggio scende -> VAR / GOL ANNULLATO!
+                else if (d.score1 < prevScore1 || d.score2 < prevScore2) {
+                    triggerAnimation("active-var");
                 }
             }
 
+            // Aggiorna lo scoreboard reale sul browser
             document.getElementById("score1").innerText = d.score1;
             document.getElementById("score2").innerText = d.score2;
             document.getElementById("timer").innerText = d.timer;
@@ -172,20 +194,25 @@
             document.getElementById("logo1").src = d.logo1;
             document.getElementById("logo2").src = d.logo2;
 
+            // Salva lo stato attuale per il prossimo controllo
             prevScore1 = d.score1;
             prevScore2 = d.score2;
         };
 
-        function triggerGoal() {
+        function triggerAnimation(className) {
             const animContainer = document.getElementById("goalAnimation");
             
-            animContainer.classList.remove("active");
-            void animContainer.offsetWidth; // Forza il reset dell'animazione per i gol successivi
-            animContainer.classList.add("active");
+            // Pulizia classi precedenti per resettare il CSS
+            animContainer.classList.remove("active-goal", "active-var");
+            void animContainer.offsetWidth; // Forza il reset hardware del browser
+            
+            // Attiva la classe specifica richiesta (active-goal o active-var)
+            animContainer.classList.add(className);
 
+            // Nasconde l'animazione dopo 3.5 secondi
             setTimeout(() => {
-                animContainer.classList.remove("active");
-            }, 3000); 
+                animContainer.classList.remove(className);
+            }, 3500); 
         }
     </script>
 </body>
