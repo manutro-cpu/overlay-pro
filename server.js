@@ -19,6 +19,9 @@ let state = {
   running: false
 };
 
+// Teniamo traccia di chi ha segnato l'ultimo gol per sapere chi scalare con la VAR
+let lastGoalTeam = null;
+
 function formatTime(){
   let m = Math.floor(state.seconds / 60);
   let s = state.seconds % 60;
@@ -49,8 +52,28 @@ wss.on("connection",(ws)=>{
 
     switch(data.type){
 
-      case "goal1": state.score1++; break;
-      case "goal2": state.score2++; break;
+      case "goal1": 
+        state.score1++; 
+        lastGoalTeam = 1; // Salva che ha segnato la squadra 1
+        break;
+        
+      case "goal2": 
+        state.score2++; 
+        lastGoalTeam = 2; // Salva che ha segnato la squadra 2
+        break;
+
+      case "var":
+        // Se l'ultimo gol lo ha fatto la squadra 1 ed è maggiore di 0, togli 1 punto
+        if (lastGoalTeam === 1 && state.score1 > 0) {
+          state.score1--;
+          lastGoalTeam = null; // Resetta l'ultimo gol salvato
+        } 
+        // Se l'ultimo gol lo ha fatto la squadra 2 ed è maggiore di 0, togli 1 punto
+        else if (lastGoalTeam === 2 && state.score2 > 0) {
+          state.score2--;
+          lastGoalTeam = null; // Resetta l'ultimo gol salvato
+        }
+        break;
 
       case "reset":
         state = {
@@ -60,6 +83,7 @@ wss.on("connection",(ws)=>{
           seconds:0,
           running:false
         };
+        lastGoalTeam = null;
         break;
 
       case "timer":
