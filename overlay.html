@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="it">
-
 <head>
     <meta charset="UTF-8">
     <title>Scoreboard Animata</title>
@@ -64,14 +63,13 @@
             position: absolute;
             width: 100%;
             height: 100%;
-            display: none; /* Nascosto di default */
+            display: none; 
             justify-content: center;
             align-items: center;
-            z-index: 999;  /* Sopra alla scoreboard */
-            background: rgba(0, 0, 0, 0.2); /* Opzionale: scurisce leggermente lo sfondo durante il gol */
+            z-index: 999;  
+            background: rgba(0, 0, 0, 0.2); 
         }
 
-        /* Questa classe viene attivata dal JavaScript quando cambia il punteggio */
         #goalAnimation.active {
             display: flex; 
         }
@@ -89,8 +87,6 @@
             top: 50%;
             transform: translateY(-50%);
             left: 0;
-            /* L'animazione partirà SOLO quando il contenitore diventa visibile */
-            animation: moveBall 2.5s linear forwards;
         }
 
         #goalText {
@@ -105,7 +101,14 @@
             white-space: nowrap;
             overflow: hidden;
             width: 0;
-            /* L'animazione partirà SOLO quando il contenitore diventa visibile */
+        }
+
+        /* Le animazioni partono solo quando c'è la classe .active */
+        #goalAnimation.active #ball {
+            animation: moveBall 2.5s linear forwards;
+        }
+
+        #goalAnimation.active #goalText {
             animation: revealText 2.5s linear forwards;
         }
 
@@ -117,10 +120,9 @@
         @keyframes revealText {
             0% { width: 0; }
             100% { width: 700px; }
-        } /* Graffa corretta e chiusa */
+        }
     </style>
 </head>
-
 <body>
 
     <div class="scoreboard">
@@ -141,30 +143,27 @@
     <div id="goalAnimation">
         <div id="track"> 
             <img id="ball" src="pallone.png">
-            <div id="goalText">GOOAL</div>
+            <div id="goalText">GOOOOOAL</div>
         </div>
     </div>
 
     <script src="script.js"></script>
+    
     <script>
         const ws = new WebSocket("wss://" + location.host);
         
-        // Variabili di controllo per monitorare i cambi di punteggio
         let prevScore1 = null;
         let prevScore2 = null;
 
         ws.onmessage = (msg) => {
             const d = JSON.parse(msg.data);
 
-            // Controlla se i punteggi precedenti esistevano già (evita l'animazione al primo avvio)
             if (prevScore1 !== null && prevScore2 !== null) {
-                // Se lo score 1 o lo score 2 sono aumentati, attiva l'animazione
                 if (d.score1 > prevScore1 || d.score2 > prevScore2) {
                     triggerGoal();
                 }
             }
 
-            // Aggiorna i dati nel DOM
             document.getElementById("score1").innerText = d.score1;
             document.getElementById("score2").innerText = d.score2;
             document.getElementById("timer").innerText = d.timer;
@@ -173,24 +172,21 @@
             document.getElementById("logo1").src = d.logo1;
             document.getElementById("logo2").src = d.logo2;
 
-            // Memorizza i punteggi attuali per il prossimo controllo
             prevScore1 = d.score1;
             prevScore2 = d.score2;
         };
 
-        // Funzione che gestisce l'accensione e lo spegnimento dell'animazione
         function triggerGoal() {
             const animContainer = document.getElementById("goalAnimation");
             
-            // Applica la classe CSS che imposta 'display: flex' e fa partire i @keyframes
+            animContainer.classList.remove("active");
+            void animContainer.offsetWidth; // Forza il reset dell'animazione per i gol successivi
             animContainer.classList.add("active");
 
-            // Rimuove la classe dopo 3 secondi (3000 millisecondi) per resettare tutto
             setTimeout(() => {
                 animContainer.classList.remove("active");
             }, 3000); 
         }
     </script>
 </body>
-
 </html>
