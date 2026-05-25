@@ -50,7 +50,7 @@
             text-align: right;
         }
 
-        /* Ospiti: Logo a sinistra, Nome a destra */
+        /* Ospiti invertiti: Nome a sinistra, Logo a destra */
         .team.away {
             justify-content: flex-start;
             text-align: left;
@@ -73,9 +73,9 @@
             object-fit: contain;
         }
 
-        /* Margini interni per i loghi */
+        /* Margini corretti per l'ordine degli elementi */
         .team.home .logo { margin-left: 12px; }
-        .team.away .logo { margin-right: 12px; } /* Margine a destra perché il nome segue il logo */
+        .team.away .logo { margin-left: 12px; } /* Il logo ospite ora è a destra del testo */
 
         /* Blocco Centrale del Risultato */
         .center-score {
@@ -99,17 +99,17 @@
 
         /* === RIQUADRO DEL TIMER SOTTO I MINUTI === */
         .timer-box {
-            width: 80px;
+            width: 80px; /* Più stretto del blocco del punteggio per l'effetto Sky */
             height: 22px;
             background: #111116;
             border: 1px solid #2a2a35;
-            border-top: none;
+            border-top: none; /* Si unisce alla scoreboard sopra */
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 13px;
             font-weight: 700;
-            color: #ffcc00;
+            color: #ffcc00; /* Giallo Sky per il tempo */
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
 
@@ -130,8 +130,8 @@
             display: flex; 
         }
 
-        #goalAnimation.active-goal { background: #e50c1b; } 
-        #goalAnimation.active-var { background: #ffcc00; }  
+        #goalAnimation.active-goal { background: #e50c1b; } /* Rosso Gol */
+        #goalAnimation.active-var { background: #ffcc00; }  /* Giallo VAR */
 
         #track {
             position: relative;
@@ -144,4 +144,100 @@
 
         #goalText, #varText {
             font-size: 14px;
-            font-weight
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            display: none;
+        }
+
+        #goalText { color: #ffffff; }
+        #varText { color: #000000; }
+
+        #goalAnimation.active-goal #goalText { display: block; animation: pulseText 0.5s ease infinite alternate; }
+        #goalAnimation.active-var #varText { display: block; }
+
+        @keyframes pulseText {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.05); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="wrapper">
+        
+        <div class="scoreboard">
+            <div class="team home"> 
+                <span id="team1">ALCIGNE</span> 
+                <img class="logo" id="logo1" src=""> 
+            </div>
+            
+            <div class="center-score">
+                <div class="score" id="score1">0</div>
+                <div class="score" id="score2">0</div>
+            </div>
+
+            <div class="team away"> 
+                <span id="team2">VIKI HATZ</span> 
+                <img class="logo" id="logo2" src=""> 
+            </div>
+        </div>
+
+        <div class="timer-box" id="timer">00:00</div>
+
+        <div id="goalAnimation">
+            <div id="track"> 
+                <div id="goalText">⚽ GOOOOOAL ⚽</div>
+                <div id="varText">🖥️ VAR - GOAL ANNULLATO</div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+    
+    <script>
+        const ws = new WebSocket("wss://" + location.host);
+        
+        let prevScore1 = null;
+        let prevScore2 = null;
+
+        ws.onmessage = (msg) => {
+            const d = JSON.parse(msg.data);
+
+            if (prevScore1 !== null && prevScore2 !== null) {
+                if (d.score1 > prevScore1 || d.score2 > prevScore2) {
+                    triggerAnimation("active-goal");
+                } 
+                else if (d.score1 < prevScore1 || d.score2 < prevScore2) {
+                    triggerAnimation("active-var");
+                }
+            }
+
+            document.getElementById("score1").innerText = d.score1;
+            document.getElementById("score2").innerText = d.score2;
+            document.getElementById("timer").innerText = d.timer;
+            document.getElementById("team1").innerText = d.team1;
+            document.getElementById("team2").innerText = d.team2;
+            document.getElementById("logo1").src = d.logo1;
+            document.getElementById("logo2").src = d.logo2;
+
+            prevScore1 = d.score1;
+            prevScore2 = d.score2;
+        };
+
+        function triggerAnimation(className) {
+            const animContainer = document.getElementById("goalAnimation");
+            
+            animContainer.classList.remove("active-goal", "active-var");
+            void animContainer.offsetWidth; 
+            
+            animContainer.classList.add(className);
+
+            setTimeout(() => {
+                animContainer.classList.remove(className);
+            }, 3500); 
+        }
+    </script>
+</body>
+</html>
